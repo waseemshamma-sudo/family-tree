@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <!-- السطر التالي هو ما يحل مشكلة صغر حجم الصفحة على الجوال -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>صلة القرابة</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -52,12 +54,13 @@
         
         .side-by-side { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; }
         .column { display: flex; flex-direction: column; align-items: center; flex: 1; }
-@media (max-width: 768px) {
-    .container { padding: 15px; }
-    .side-by-side { flex-direction: column; gap: 20px; }
-    .column { width: 100%; }
-    .node { min-width: 100%; }
-}
+        
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .side-by-side { flex-direction: column; gap: 20px; }
+            .column { width: 100%; }
+            .node { min-width: 100%; }
+        }
     </style>
 </head>
 <body>
