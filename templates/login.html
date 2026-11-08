@@ -2,17 +2,77 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <!-- إضافة وسم التجاوب مع شاشات الجوال -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        h2 { color: #2c3e50; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #bdc3c7; border-radius: 8px; font-family: 'Tajawal'; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Tajawal'; font-size: 16px; font-weight: bold; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            background: #f4f7f6; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px; /* لحماية المربع من الالتصاق بالشاشة في الجوال */
+        }
+        .login-box { 
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 380px; /* السماح للمربع بالتمدد حتى 380 بكسل */
+            text-align: center; 
+        }
+        h2 { color: #2c3e50; margin-top: 0; margin-bottom: 25px; font-size: 24px; }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            border: 1px solid #bdc3c7; 
+            border-radius: 8px; 
+            font-family: 'Tajawal', sans-serif; 
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-family: 'Tajawal', sans-serif; 
+            font-size: 16px; 
+            font-weight: bold; 
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
         button:hover { background: #2980b9; }
-        .error { color: #e74c3c; margin-bottom: 15px; }
-        a { display: block; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 14px; }
+        .error { 
+            background: #fce8e6; 
+            color: #c5221f; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            font-size: 14px; 
+            border: 1px solid #fad2cf;
+        }
+        a { 
+            display: inline-block; 
+            margin-top: 20px; 
+            color: #7f8c8d; 
+            text-decoration: none; 
+            font-size: 14px; 
+            transition: color 0.3s;
+        }
+        a:hover { color: #34495e; text-decoration: underline; }
     </style>
 </head>
 <body>
