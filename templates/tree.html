@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الشجرة الكاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        
+        /* شريط الأدوات (الأزرار الجديدة) */
+        .toolbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .btn-tool { 
+            padding: 8px 20px; 
+            border: none; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-family: 'Tajawal', sans-serif; 
+            font-weight: bold; 
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .btn-expand { background: #e8f0fe; color: #1a73e8; }
+        .btn-expand:hover { background: #d2e3fc; }
+        .btn-collapse { background: #fce8e6; color: #c5221f; }
+        .btn-collapse:hover { background: #fad2cf; }
+
+        /* تصميم الشجرة المنسدلة */
+        .tree-root { margin-bottom: 15px; }
+        details { margin-bottom: 10px; }
+        
+        summary {
+            cursor: pointer;
+            padding: 10px 15px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+            list-style: none;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary:hover { background: #d5dbdb; }
+        
+        summary::before {
+            content: '▶';
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: #7f8c8d;
+        }
+        details[open] > summary::before {
+            transform: rotate(90deg);
+        }
+
+        .member-link { color: #2980b9; text-decoration: none; font-weight: bold; }
+        .member-link:hover { text-decoration: underline; }
+        
+        .badge { background: #e8f0fe; color: #1a73e8; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: auto; }
+        .badge-dead { background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: auto; }
+
+        .children-container {
+            padding-right: 30px;
+            border-right: 2px dashed #bdc3c7;
+            margin-right: 20px;
+            margin-top: 5px;
+        }
+
+        .btn-back { display: inline-block; padding: 10px 20px; background: #95a5a6; color: white; text-decoration: none; border-radius: 5px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🌳 شجرة عائلة شما</h2>
+        
+        <!-- أزرار التحكم بالطي والتوسيع -->
+        <div class="toolbar">
+            <button class="btn-tool btn-expand" onclick="toggleAll(true)">⬇️ توسيع الكل</button>
+            <button class="btn-tool btn-collapse" onclick="toggleAll(false)">⬆️ طي الكل</button>
+        </div>
+
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">اضغط على أي اسم لفتح فروعه، أو انقر على الاسم نفسه لعرض الملف الشخصي.</p>
+        
+        <div class="tree-root">
+            {% for branch in tree %}
+                {% set branch_data = branch %}
+                {% include 'tree_branch.html' %}
+            {% endfor %}
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="/" class="btn-back">العودة للرئيسية</a>
+        </div>
+    </div>
+
+    <!-- سكربت التحكم في الشجرة -->
+    <script>
+        function toggleAll(open) {
+            // جلب كل عناصر details في الصفحة
+            const detailsElements = document.querySelectorAll('details');
+            detailsElements.forEach(el => {
+                el.open = open;
+            });
+        }
+    </script>
+</body>
+</html>س

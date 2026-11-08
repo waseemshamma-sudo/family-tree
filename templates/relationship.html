@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>صلة القرابة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #2c3e50; }
+        
+        /* نموذج البحث */
+        .form-box { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .input-group { position: relative; }
+        .input-group label { display: block; margin-bottom: 5px; color: #34495e; font-weight: bold; }
+        .input-group input[type="text"] { width: 100%; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px; font-family: 'Tajawal'; box-sizing: border-box; font-size: 16px; }
+        .input-group input[type="hidden"] { display: none; }
+        .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background: white; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; }
+        .autocomplete-items div { padding: 10px; cursor: pointer; background-color: #fff; border-bottom: 1px solid #d4d4d4; }
+        .autocomplete-items div:hover { background-color: #e9e9e9; }
+        button[type="submit"] { padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Tajawal'; font-size: 16px; font-weight: bold; }
+        
+        .result-header { text-align: center; background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .result-header h3 { margin: 0; color: #2980b9; font-size: 22px; }
+        .error { color: #e74c3c; font-weight: bold; text-align: center; }
+
+        /* تصميم الشجرة المتداخلة */
+        .relationship-tree { display: flex; flex-direction: column; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 20px; }
+        .tree-level { display: flex; justify-content: center; gap: 20px; width: 100%; position: relative; margin-bottom: 15px; }
+        .tree-node-box { display: flex; flex-direction: column; align-items: center; }
+        
+        .node { 
+            background: white; border: 2px solid #3498db; padding: 10px 15px; border-radius: 8px; 
+            text-align: center; min-width: 150px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+            transition: 0.3s; text-decoration: none; color: #2c3e50; position: relative;
+        }
+        .node:hover { transform: translateY(-3px); box-shadow: 0 5px 12px rgba(0,0,0,0.15); }
+        
+        .node.ancestor { background: #2c3e50; color: white; border-color: #1a252f; font-size: 18px; border-radius: 20px; padding: 12px 25px; }
+        .node.p1 { background: #f39c12; color: white; border-color: #d68910; }
+        .node.p2 { background: #27ae60; color: white; border-color: #1e8449; }
+        .node.path-node { background: #f8f9fa; border-color: #bdc3c7; color: #34495e; font-size: 14px; }
+        
+        .node-title { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .node-sub { font-size: 12px; opacity: 0.9; }
+        
+        /* خطوط الربط */
+        .connector-vertical { width: 2px; height: 25px; background: #bdc3c7; margin: 0 auto; }
+        .connector-horizontal { display: flex; justify-content: space-between; width: 60%; position: absolute; top: -15px; height: 2px; background: #bdc3c7; z-index: -1; }
+        .branch-connector { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+        .branch-connector::before { content: ''; position: absolute; top: 0; left: 50%; width: 2px; height: 100%; background: #bdc3c7; z-index: -1; transform: translateX(-50%); }
+        
+        .side-by-side { display: flex; justify-content: space-around; width: 100%; margin-top: 20px; }
+        .column { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🧬 صلة القرابة</h2>
+        
+        <form method="POST" class="form-box" id="relForm">
+            <div class="input-group">
+                <label>الشخص الأول:</label>
+                <input type="text" id="search1" placeholder="ابحث بالاسم..." autocomplete="off">
+                <input type="hidden" name="p1" id="id1" value="{{ p1_id or '' }}">
+                <div id="list1" class="autocomplete-items"></div>
+            </div>
+            <div class="input-group">
+                <label>الشخص الثاني:</label>
+                <input type="text" id="search2" placeholder="ابحث بالاسم..." autocomplete="off">
+                <input type="hidden" name="p2" id="id2" value="{{ p2_id or '' }}">
+                <div id="list2" class="autocomplete-items"></div>
+            </div>
+            <button type="submit">احسب العلاقة</button>
+        </form>
+
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+        {% if result %}
+        <div class="result-header">
+            <h3>العلاقة: {{ result.relationship }}</h3>
+        </div>
+        
+        <div class="relationship-tree">
+            <!-- 1. الجد المشترك (القمة) -->
+            <a href="/person/{{ result.ancestor.id }}" class="node ancestor">
+                👑 {{ result.ancestor.name }}
+                {% if result.ancestor.age %}<div class="node-sub">{{ result.ancestor.age }} سنة</div>{% endif %}
+            </a>
+            
+            <div class="connector-vertical"></div>
+            
+            <!-- 2. الفروع (الشخصين والمسارات) -->
+            <div class="side-by-side">
+                <!-- مسار الشخص الأول -->
+                <div class="column">
+                    <!-- رسم المسار من الجد للشخص الأول -->
+                    {% for per in result.path1|reverse %}
+                        <a href="/person/{{ per.id }}" class="node path-node">
+                            {{ per.name }}
+                            {% if per.is_dead %}🕊️{% endif %}
+                            {% if per.age %}<div class="node-sub">{{ per.age }} سنة</div>{% endif %}
+                        </a>
+                        <div class="connector-vertical"></div>
+                    {% endfor %}
+                    
+                    <!-- الشخص الأول نفسه -->
+                    <a href="/person/{{ result.p1.id }}" class="node p1">
+                        {{ result.p1.name }}
+                        {% if result.p1.death_year %}🕊️{% endif %}
+                        {% if result.p1.birth_year %}<div class="node-sub">{{ calculate_age(result.p1.birth_year, result.p1.death_year) }} سنة</div>{% endif %}
+                    </a>
+                </div>
+
+                <!-- مسار الشخص الثاني -->
+                <div class="column">
+                    {% for per in result.path2|reverse %}
+                        <a href="/person/{{ per.id }}" class="node path-node">
+                            {{ per.name }}
+                            {% if per.is_dead %}🕊️{% endif %}
+                            {% if per.age %}<div class="node-sub">{{ per.age }} سنة</div>{% endif %}
+                        </a>
+                        <div class="connector-vertical"></div>
+                    {% endfor %}
+                    
+                    <a href="/person/{{ result.p2.id }}" class="node p2">
+                        {{ result.p2.name }}
+                        {% if result.p2.death_year %}🕊️{% endif %}
+                        {% if result.p2.birth_year %}<div class="node-sub">{{ calculate_age(result.p2.birth_year, result.p2.death_year) }} سنة</div>{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" style="color: #7f8c8d; text-decoration: none;">العودة للرئيسية</a>
+        </div>
+    </div>
+
+    <script>
+        function setupAutocomplete(inputId, hiddenId, listId) {
+            const input = document.getElementById(inputId);
+            const hidden = document.getElementById(hiddenId);
+            const list = document.getElementById(listId);
+            let timeoutId = null; // متغير للمؤقت
+
+            input.addEventListener('input', function() {
+                clearTimeout(timeoutId); // مسح المؤقت السابق
+                const val = this.value;
+                hidden.value = "";
+                list.innerHTML = "";
+                
+                if (val.length < 2) return;
+
+                // الانتظار 300 مللي ثانية قبل إرسال الطلب
+                timeoutId = setTimeout(() => {
+                    fetch('/api/search_people?q=' + encodeURIComponent(val))
+                        .then(res => res.json())
+                        .then(data => {
+                            list.innerHTML = ""; // مسح القائمة القديمة
+                            data.results.forEach(item => {
+                                const div = document.createElement("div");
+                                div.innerHTML = item.text;
+                                div.addEventListener("click", function() {
+                                    input.value = item.text;
+                                    hidden.value = item.id;
+                                    list.innerHTML = "";
+                                });
+                                list.appendChild(div);
+                            });
+                        })
+                        .catch(err => console.log(err));
+                }, 300); // 300ms تأخير
+            });
+            
+            document.addEventListener("click", function(e) {
+                if (e.target !== input) list.innerHTML = "";
+            });
+        }
+        setupAutocomplete('search1', 'id1', 'list1');
+        setupAutocomplete('search2', 'id2', 'list2');
+    </script>
+</body>
+</html>

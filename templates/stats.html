@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إحصائيات العائلة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        
+        .section-title { color: #2980b9; border-right: 4px solid #3498db; padding-right: 10px; margin: 30px 0 15px 0; font-size: 20px; }
+
+        /* شبكة البطاقات */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        
+        .card { 
+            background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; 
+            text-align: center; transition: 0.3s; text-decoration: none; color: inherit; display: block;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #3498db; }
+        
+        .card h3 { margin: 0 0 10px 0; color: #7f8c8d; font-size: 16px; font-weight: normal; }
+        .card .number { font-size: 32px; font-weight: bold; color: #2c3e50; margin: 0; }
+        .card .sub { font-size: 14px; color: #e74c3c; font-weight: bold; margin-top: 5px; }
+        
+        /* تخصيص ألوان البطاقات */
+        .card.blue { border-bottom: 4px solid #3498db; }
+        .card.green { border-bottom: 4px solid #2ecc71; }
+        .card.red { border-bottom: 4px solid #e74c3c; }
+        .card.orange { border-bottom: 4px solid #f39c12; }
+
+        /* المدن (قابلة للنقر) */
+        .location-card { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; text-decoration: none; color: #2c3e50; background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; transition: 0.3s; }
+        .location-card:hover { background: #e8f0fe; border-color: #3498db; }
+        .location-name { font-weight: bold; font-size: 18px; }
+        .location-count { background: #3498db; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+
+        .btn-back { display: inline-block; padding: 10px 20px; background: #95a5a6; color: white; text-decoration: none; border-radius: 5px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 إحصائيات عائلة شما</h2>
+        
+        <!-- 1. الأرقام العامة -->
+        <div class="grid">
+            <div class="card blue">
+                <h3>👥 إجمالي الأفراد</h3>
+                <p class="number">{{ total }}</p>
+            </div>
+            <div class="card green">
+                <h3>💚 الأحياء</h3>
+                <p class="number">{{ alive }}</p>
+            </div>
+            <div class="card red">
+                <h3>🕊️ المتوفون</h3>
+                <p class="number">{{ dead }}</p>
+            </div>
+        </div>
+
+        <!-- 2. إحصائيات الأعمار -->
+        <h3 class="section-title">📈 الأعمار</h3>
+        <div class="grid">
+            <div class="card orange">
+                <h3>متوسط عمر الأحياء</h3>
+                <p class="number">{{ avg_alive_age }}</p>
+                <p style="color:#7f8c8d; margin:0;">سنة</p>
+            </div>
+            <div class="card orange">
+                <h3>متوسط عمر الوفاة</h3>
+                <p class="number">{{ avg_dead_age }}</p>
+                <p style="color:#7f8c8d; margin:0;">سنة</p>
+            </div>
+            
+            {% if oldest_alive %}
+            <a href="/person/{{ oldest_alive.id }}" class="card blue">
+                <h3>أكبر معمر حي</h3>
+                <p class="number" style="font-size: 20px;">{{ oldest_alive.name }}</p>
+                <p class="sub">{{ oldest_alive.age }} سنة</p>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- 3. المدن (قابلة للنقر) -->
+        <h3 class="section-title">📍 توزيع بلدان الإقامة <span style="font-size:14px; color:#7f8c8d; font-weight:normal;">(انقر للتصفية)</span></h3>
+        <div>
+            {% for loc, count in sorted_locations %}
+                <!-- الرابط هنا ينقلك للصفحة الرئيسية مع تفعيل فلتر البلد -->
+                <a href="/?location={{ loc }}" class="location-card">
+                    <span class="location-name">🌍 {{ loc }}</span>
+                    <span class="location-count">{{ count }} فرد</span>
+                </a>
+            {% else %}
+                <p style="text-align: center; color: #7f8c8d;">لا توجد بيانات للمدن.</p>
+            {% endfor %}
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="/" class="btn-back">العودة للرئيسية</a>
+        </div>
+    </div>
+</body>
+</html>

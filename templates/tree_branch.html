@@ -1,0 +1,31 @@
+{% set p = branch_data.person %}
+{% set children = branch_data.children %}
+
+<details {% if not p.father_id %}open{% endif %}>
+    <summary>
+        <a href="/person/{{ p.id }}" class="member-link" onclick="event.stopPropagation();">{{ p.name }}</a>
+        
+        {% if p.death_year %}
+            <span class="badge-dead">🕊️ متوفى</span>
+        {% elif p.age %}
+            <span class="badge">🎂 {{ p.age }} سنة</span>
+        {% endif %}
+
+        <!-- زر إضافة ابن جديد يفتح النموذج مع تعبئة الأب مسبقاً -->
+        <a href="/add?father_id={{ p.id }}" 
+           onclick="event.stopPropagation();" 
+           style="margin-right: auto; background: #2ecc71; color: white; padding: 4px 10px; border-radius: 5px; text-decoration: none; font-size: 12px; font-weight: bold;" 
+           title="إضافة ابن إلى {{ p.name }}">
+           ➕
+        </a>
+    </summary>
+    
+    {% if children %}
+        <div class="children-container">
+            {% for child in children %}
+                {% set branch_data = child %}
+                {% include 'tree_branch.html' %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</details>
