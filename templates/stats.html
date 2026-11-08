@@ -37,6 +37,11 @@
         .location-count { background: #3498db; color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
 
         .btn-back { display: inline-block; padding: 10px 20px; background: #95a5a6; color: white; text-decoration: none; border-radius: 5px; margin-top: 30px; }
+@media (max-width: 768px) {
+    .container { padding: 15px; }
+    .grid { grid-template-columns: 1fr; } /* جعل البطاقات تحت بعضها */
+    .location-card { flex-direction: column; text-align: center; gap: 5px; }
+}
     </style>
 </head>
 <body>
