@@ -2,34 +2,71 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <!-- إضافة وسم التجاوب مع الجوال -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>شجرة العائلة</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        .nav-links { text-align: center; margin-bottom: 20px; }
-        .nav-links a { margin: 0 10px; text-decoration: none; color: #3498db; font-weight: bold; }
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; background: #ecf0f1; padding: 15px; border-radius: 8px; }
-        .filters input { flex: 1; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-family: 'Tajawal'; }
-        .filters button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: 'Tajawal'; }
-        .member-card { border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
-        .member-card:hover { background: #f9f9f9; border-color: #3498db; }
-        .member-info h3 { margin: 0 0 5px 0; color: #2980b9; }
-        .member-info p { margin: 0; color: #7f8c8d; font-size: 14px; }
-        .btn-view { background: #2ecc71; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
         
         /* تنسيق الإشعارات */
         .flash-msg { background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #c3e6cb; font-weight: bold; }
         .flash-msg.warning { background: #fff3cd; color: #856404; border-color: #ffeeba; }
-@media (max-width: 768px) {
-    .container { padding: 15px; }
-    h1 { font-size: 22px; }
-    .nav-links { flex-direction: column; gap: 8px; }
-    .nav-links a { width: 100%; text-align: center; padding: 10px; background: white; border-radius: 5px; border: 1px solid #eee; }
-    .filters { flex-direction: column; }
-    .member-card { flex-direction: column; text-align: center; gap: 10px; }
-}
+
+        /* شريط التنقل العلوي */
+        .nav-links { 
+            display: flex; justify-content: center; align-items: center; flex-wrap: wrap; 
+            gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #eef2f5;
+        }
+        .nav-links a { text-decoration: none; color: #3498db; font-weight: bold; font-size: 15px; transition: 0.2s; }
+        .nav-links a:hover { color: #2980b9; text-decoration: underline; }
+        .nav-separator { border-right: 2px solid #ddd; height: 20px; margin: 0 5px; }
+        .user-status { color:#2c3e50; font-weight:bold; font-size: 15px; }
+        .badge-count { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; margin-right: 5px; }
+
+        /* الفلاتر والبحث */
+        .filters { display: flex; gap: 10px; margin-bottom: 25px; background: #ecf0f1; padding: 15px; border-radius: 10px; }
+        .filters input { flex: 1; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px; font-family: 'Tajawal'; font-size: 15px; outline: none; transition: 0.3s; }
+        .filters input:focus { border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+        .filters button { padding: 12px 25px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Tajawal'; font-weight: bold; font-size: 15px; transition: 0.3s; }
+        .filters button:hover { background: #2980b9; }
+
+        /* بطاقات الأعضاء */
+        .results-title { color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; }
+        .member-card { 
+            border: 1px solid #e0e0e0; padding: 15px 20px; margin-bottom: 12px; border-radius: 10px; 
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s; background: #fff;
+        }
+        .member-card:hover { background: #fdfdfd; border-color: #3498db; box-shadow: 0 3px 10px rgba(0,0,0,0.05); transform: translateY(-2px); }
+        .member-info h3 { margin: 0 0 8px 0; color: #2980b9; font-size: 18px; }
+        .member-info span.father-name { font-size: 14px; color: #7f8c8d; font-weight: normal; }
+        .member-info p { margin: 0; color: #7f8c8d; font-size: 14px; }
+        .btn-view { background: #2ecc71; color: white; padding: 8px 20px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: bold; transition: 0.3s; }
+        .btn-view:hover { background: #27ae60; }
+        
+        /* ✅ تحسينات الجوال */
+        @media (max-width: 768px) {
+            .container { padding: 15px; border-radius: 0; box-shadow: none; }
+            h1 { font-size: 24px; margin-bottom: 15px; }
+            
+            /* شريط التنقل على الجوال */
+            .nav-links { flex-direction: column; gap: 10px; padding: 15px; align-items: stretch; text-align: center; }
+            .nav-links a { display: block; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e0e6e8; }
+            .nav-separator { display: none; /* إخفاء الفاصل في الجوال لأنه سيتحول لقائمة رأسية */ }
+            .user-status { padding: 10px; background: #e8f0fe; border-radius: 8px; }
+            
+            /* الفلاتر */
+            .filters { flex-direction: column; padding: 15px; gap: 12px; }
+            .filters input { width: 100%; }
+            .filters button { width: 100%; }
+            
+            /* البطاقات */
+            .member-card { flex-direction: column; text-align: center; gap: 15px; padding: 20px 15px; }
+            .btn-view { width: 100%; display: block; padding: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -48,33 +85,33 @@
         {% endwith %}
 
         <!-- شريط التنقل العلوي -->
-        <div class="nav-links" style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 10px; border-radius: 8px;">
+        <div class="nav-links">
             <a href="/">الرئيسية</a>
             <a href="/tree">🌳 الشجرة الكاملة</a>
             <a href="/relationship">🧬 صلة القرابة</a>
             <a href="/stats">📊 الإحصائيات</a>
             <a href="/export_excel" style="color: #e67e22;">📥 تصدير إلى Excel</a>
             
-            <!-- فاصل -->
-            <span style="border-right: 2px solid #ddd; height: 20px; margin: 0 5px;"></span>
+            <!-- فاصل (يختفي في شاشات الجوال) -->
+            <span class="nav-separator"></span>
             
             <!-- حالة المستخدم -->
             {% if session.get('user_id') %}
-                <span style="color:#2c3e50; font-weight:bold;">👤 {{ session['user_name'] }}</span>
+                <span class="user-status">👤 {{ session['user_name'] }}</span>
                 <a href="/change_password" style="color: #f39c12;">🔑 تغيير كلمة المرور</a>
                 <a href="/add" style="color: #2ecc71;">➕ إضافة شخص</a>
                 
-                <!-- ✅ رابط طلبات التعميد للمشرفين فقط مع العداد -->
+                <!-- روابط طلبات التعميد للمشرفين فقط -->
                 {% if session.get('role') in ['super_admin', 'admin'] %}
-                    <a href="/admin/pending" style="color: #e67e22; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                    <a href="/admin/pending" style="color: #e67e22; display: flex; align-items: center; justify-content: center; gap: 5px;">
                         ⏳ طلبات التعميد
                         {% if pending_count and pending_count > 0 %}
-                            <span style="background: #e74c3c; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px;">{{ pending_count }}</span>
+                            <span class="badge-count">{{ pending_count }}</span>
                         {% endif %}
                     </a>
                 {% endif %}
                 
-                <a href="/logout" style="color:#e74c3c; font-size: 14px;">تسجيل خروج</a>
+                <a href="/logout" style="color:#e74c3c;">تسجيل خروج</a>
             {% else %}
                 <a href="/login" style="color:#3498db;">🔐 تسجيل دخول</a>
             {% endif %}
@@ -87,17 +124,17 @@
             <button type="submit">بحث</button>
         </form>
 
-        <h3>النتائج ({{ members|length }})</h3>
+        <h3 class="results-title">النتائج ({{ members|length }})</h3>
         {% for m in members %}
         <div class="member-card">
             <div class="member-info">
-                <h3>{{ m.name }} {% if m.father_name %}<span style="font-size:14px; color:#7f8c8d; font-weight:normal;">بن {{ m.father_name }}</span>{% endif %}</h3>
+                <h3>{{ m.name }} {% if m.father_name %}<span class="father-name">بن {{ m.father_name }}</span>{% endif %}</h3>
                 <p>{{ m.flag }} {{ m.location or 'غير محدد' }} | 💼 {{ m.job or 'غير محدد' }} | 🎂 {{ m.age or '?' }} سنة</p>
             </div>
             <a href="/person/{{ m.id }}" class="btn-view">عرض</a>
         </div>
         {% else %}
-        <p style="text-align: center; color: #e74c3c;">لا توجد نتائج مطابقة.</p>
+        <p style="text-align: center; color: #e74c3c; font-weight: bold; margin-top: 30px;">لا توجد نتائج مطابقة.</p>
         {% endfor %}
     </div>
 </body>
