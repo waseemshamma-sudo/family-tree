@@ -10,6 +10,8 @@ import json
 import re
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from kinship import relation_label, category, explain, is_female
+from tree_pdf import build_tree_pdf
 
 load_dotenv()
 
@@ -236,6 +238,17 @@ def api_search_people():
     except Exception as e:
         return {'results': []}
 
+@app.route('/api/person_label')
+@login_required
+def api_person_label():
+    pid = request.args.get('id', type=int)
+    members = get_all_members()
+    p = next((m for m in members if m['id'] == pid), None)
+    if not p:
+        return {'text': ''}
+    f = next((m for m in members if m['id'] == p.get('father_id')), None)
+    return {'text': f"{p['name']} بن {f['name']}" if f else p['name']}
+
 @app.route('/relationship', methods=['GET', 'POST'])
 @login_required
 def relationship():
@@ -278,27 +291,31 @@ def relationship():
                     break
             if found: break
             
-        if not common_ancestor:
+        if p1_id == p2_id:
+            error = "اخترت نفس الشخص مرتين."
+        elif not common_ancestor:
             error = "لا توجد صلة قرابة مباشرة بين الشخصين."
         else:
-            if d1 == d2: rel = "أخوة" if d1==1 else ("أبناء عم" if d1==2 else f"أبناء عم من الدرجة {d1-1}")
-            elif d1 == 0: rel = "الأب" if d2==1 else "الجد"
-            elif d2 == 0: rel = "الابن" if d1==1 else "الحفيد"
-            elif d1 == 1 and d2 == 2: rel = "العم"
-            elif d1 == 2 and d2 == 1: rel = "ابن الأخ"
-            else: rel = "قريب"
-            
             p1 = next(m for m in all_members if m['id'] == p1_id)
             p2 = next(m for m in all_members if m['id'] == p2_id)
-            
-            path1 = line1[1:d1]
-            path2 = line2[1:d2]
-            
+
+            rel1 = relation_label(d1, d2, is_female(p1.get('gender')))   # الأول بالنسبة للثاني
+            rel2 = relation_label(d2, d1, is_female(p2.get('gender')))   # الثاني بالنسبة للأول
+            note = None
+            if d1 == d2 == 1:
+                note = "الصلة محسوبة من جهة الأب (لا تتوفر بيانات الأم في الشجرة)."
+
             result = {
                 'p1': p1, 'p2': p2,
-                'ancestor': common_ancestor, 'relationship': rel,
-                'path1': path1, 'path2': path2,
-                'max_dist': max(d1, d2)
+                'ancestor': common_ancestor,
+                'relationship': rel1, 'relationship_rev': rel2,
+                'category': category(d1, d2),
+                'explain': explain(p1['name'], p2['name'], common_ancestor['name'], d1, d2),
+                'note': note,
+                'd1': d1, 'd2': d2,
+                'steps': d1 + d2,
+                'path1': line1[1:d1], 'path2': line2[1:d2],
+                'max_dist': max(d1, d2),
             }
 
     return render_template('relationship.html', all_members=all_members, result=result, error=error, p1_id=p1_id, p2_id=p2_id)
@@ -340,19 +357,67 @@ def export_excel():
     except Exception as e:
         return "حدث خطأ أثناء التصدير.", 500
 
+def _tree_people():
+    """بيانات آمنة للشجرة فقط (بدون الهاتف/البريد/كلمة المرور)."""
+    members = get_all_members()
+    ids = {m['id'] for m in members}
+    people = []
+    for m in members:
+        fid = m.get('father_id')
+        people.append({
+            'id': m['id'],
+            'name': (m.get('name') or '').strip(),
+            'father_id': fid if (fid and fid in ids and fid != m['id']) else None,
+            'birth': str(m.get('birth_year') or ''),
+            'death': str(m.get('death_year') or ''),
+            'age': calculate_age(m.get('birth_year'), m.get('death_year')),
+            'female': is_female(m.get('gender')),
+        })
+    return people
+
+
 @app.route('/tree')
 @login_required
 def full_tree():
+    people = _tree_people()
+    root_id = request.args.get('root', type=int)
+    if root_id and not any(p['id'] == root_id for p in people):
+        root_id = None
+    return render_template('tree.html', people=people, root_id=root_id)
+
+
+@app.route('/tree/pdf')
+@login_required
+def tree_pdf():
+    """تصدير الشجرة كاملة أو فرع (root) إلى PDF."""
     members = get_all_members()
-    roots = [m for m in members if not m.get('father_id')]
-    
-    def build_branch(person):
-        children = [m for m in members if m.get('father_id') == person['id']]
-        children = sorted(children, key=lambda x: str(x.get('birth_year', '9999')))
-        return {'person': person, 'children': [build_branch(c) for c in children]}
-        
-    tree = [build_branch(root) for root in roots]
-    return render_template('tree.html', tree=tree)
+    root_id = request.args.get('root', type=int)
+    gens = min(max(request.args.get('gens', 0, type=int), 0), 30)
+    layout = request.args.get('layout', 'auto')
+    paper = request.args.get('paper', 'auto')
+    if layout not in ('auto', 'v', 'h'): layout = 'auto'
+    if paper not in ('auto', 'A4', 'A3'): paper = 'auto'
+    details = request.args.get('details', '1') != '0'
+    inline = request.args.get('inline') == '1'
+
+    if not members:
+        return "لا توجد بيانات للتصدير", 404
+    person = next((m for m in members if m['id'] == root_id), None) if root_id else None
+    if root_id and not person:
+        abort(404)
+
+    try:
+        pdf = build_tree_pdf(members, root_id=root_id, generations=gens,
+                             layout=layout, paper=paper, details=details)
+    except FileNotFoundError:
+        return "ملفات الخط غير موجودة في static/fonts.", 500
+    except Exception:
+        return "حدث خطأ أثناء إنشاء الملف.", 500
+
+    label = re.sub(r'[^\w\-]+', '_', person['name']) if person else 'full'
+    return send_file(io.BytesIO(pdf), mimetype='application/pdf',
+                     as_attachment=not inline,
+                     download_name=f'family_tree_{label}.pdf')
 
 @app.route('/add', methods=['GET', 'POST'])
 @app.route('/edit/<int:person_id>', methods=['GET', 'POST'])
