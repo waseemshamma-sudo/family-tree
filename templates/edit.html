@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- إضافة وسم التجاوب مع الجوال -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ action }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 25px; font-size: 24px; }
+        
+        .form-group { margin-bottom: 20px; position: relative; }
+        label { display: block; margin-bottom: 8px; color: #34495e; font-weight: bold; font-size: 15px; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 1px solid #bdc3c7; 
+            border-radius: 8px; 
+            font-family: 'Tajawal', sans-serif; 
+            font-size: 15px; 
+            outline: none; 
+            transition: border-color 0.3s, box-shadow 0.3s; 
+        }
+        input:focus, select:focus { border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
+        
+        /* الأزرار */
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #2ecc71; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-family: 'Tajawal', sans-serif; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            transition: all 0.3s; 
+        }
+        button:hover { background: #27ae60; transform: translateY(-2px); }
+        
+        .btn-back { 
+            background: #95a5a6; 
+            text-decoration: none; 
+            display: block; 
+            text-align: center; 
+            padding: 14px; 
+            border-radius: 8px; 
+            color: white; 
+            margin-top: 15px; 
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s; 
+        }
+        .btn-back:hover { background: #7f8c8d; transform: translateY(-2px); }
+        
+        /* قائمة البحث المنسدلة */
+        .autocomplete-items { 
+            position: absolute; 
+            border: 1px solid #d4d4d4; 
+            border-top: none; 
+            z-index: 99; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border-radius: 0 0 8px 8px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div { padding: 12px 15px; cursor: pointer; background-color: #fff; border-bottom: 1px solid #eee; font-size: 15px; transition: background 0.2s; }
+        .autocomplete-items div:hover { background-color: #f0f4f8; color: #2980b9; font-weight: bold; }
+        .autocomplete-items div:last-child { border-bottom: none; }
+
+        /* ✅ تحسينات الجوال */
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container { padding: 25px 20px; box-shadow: none; border: 1px solid #eef2f5; border-radius: 10px; }
+            h2 { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>{{ action }}</h2>
+        <form method="POST">
+            <div class="form-group">
+                <label>الاسم الكامل:</label>
+                <input type="text" name="name" value="{{ person.name if person else '' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>الأب (ابحث بالاسم):</label>
+                <!-- منطق التعبئة: إما من بيانات الشخص أثناء التعديل، أو من الرابط عند الإضافة -->
+                <input type="text" id="search_father" placeholder="ابحث عن الأب..." autocomplete="off" 
+                       value="{% if person and person.father_id %}{{ all_members|selectattr('id', 'equalto', person.father_id)|map(attribute='name')|first }}{% elif prefilled_father_id and prefilled_father_id != '0' %}{{ all_members|selectattr('id', 'equalto', prefilled_father_id|int)|map(attribute='name')|first }}{% endif %}">
+                
+                <input type="hidden" name="father_id" id="father_id" 
+                       value="{% if person %}{{ person.father_id }}{% elif prefilled_father_id %}{{ prefilled_father_id }}{% else %}0{% endif %}">
+                
+                <div id="list_father" class="autocomplete-items"></div>
+            </div>
+
+            <div class="form-group">
+                <label>تاريخ الميلاد:</label>
+                <input type="date" name="birth_year" value="{{ person.birth_year if person else '' }}">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الوفاة (اتركه فارغاً إذا كان حياً):</label>
+                <input type="date" name="death_year" value="{{ person.death_year if person else '' }}">
+            </div>
+            <div class="form-group">
+                <label>الوظيفة:</label>
+                <input type="text" name="job" value="{{ person.job if person else '' }}">
+            </div>
+            <div class="form-group">
+                <label>رقم الجوال:</label>
+                <input type="text" name="phone" dir="ltr" style="text-align: right;" value="{{ person.phone|string|replace('.0', '') if person and person.phone else '' }}">
+            </div>
+            
+            <!-- حقل البريد الإلكتروني الجديد -->
+            <div class="form-group">
+                <label>البريد الإلكتروني:</label>
+                <input type="email" name="email" dir="ltr" style="text-align: right;" value="{{ person.email if person else '' }}" placeholder="example@email.com">
+            </div>
+            <div class="form-group">
+                <label>بلد الإقامة:</label>
+                <input type="text" name="location" value="{{ person.location if person else '' }}">
+            </div>
+            
+            <button type="submit">💾 حفظ البيانات</button>
+            <a href="/" class="btn-back">إلغاء والعودة</a>
+        </form>
+    </div>
+
+    <!-- كود JavaScript للبحث الفوري عن الأب (مع الحفاظ على التأخير لتخفيف الضغط) -->
+    <script>
+        const fInput = document.getElementById('search_father');
+        const fHidden = document.getElementById('father_id');
+        const fList = document.getElementById('list_father');
+        let fatherTimeout = null;
+
+        fInput.addEventListener('input', function() {
+            clearTimeout(fatherTimeout);
+            const val = this.value;
+            fHidden.value = "0"; // تصفير المعرف حتى يتم الاختيار
+            fList.innerHTML = "";
+            
+            if (val.length < 2) return; // لا تبحث إذا كان الحرف واحداً
+
+            fatherTimeout = setTimeout(() => {
+                fetch('/api/search_people?q=' + encodeURIComponent(val))
+                    .then(res => res.json())
+                    .then(data => {
+                        fList.innerHTML = "";
+                        data.results.forEach(item => {
+                            const div = document.createElement("div");
+                            div.innerHTML = item.text;
+                            div.addEventListener("click", function() {
+                                fInput.value = item.text;
+                                fHidden.value = item.id;
+                                fList.innerHTML = "";
+                            });
+                            fList.appendChild(div);
+                        });
+                    })
+                    .catch(err => console.log(err));
+            }, 300); // تأخير 300 مللي ثانية لتسريع البحث
+        });
+
+        // إخفاء القائمة عند النقر خارجها
+        document.addEventListener("click", function(e) {
+            if (e.target !== fInput) fList.innerHTML = "";
+        });
+    </script>
+</body>
+</html>

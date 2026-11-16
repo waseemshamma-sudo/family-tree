@@ -1,0 +1,44 @@
+# ===== بيئة بايثون =====
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# ===== البيئات الافتراضية =====
+venv/
+env/
+ENV/
+shamma_env/
+.venv/
+
+# ===== ملفات الأسرار (مهم جداً) =====
+.env
+.env.*
+*.env
+
+# ===== ملفات Excel (لا تريد رفعها) =====
+*.xlsx
+*.xls
+*.csv
+
+# ===== ملفات النظام =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== ملفات المحرر =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== ملفات مؤقتة =====
+*.log
+*.tmp
+*.bak
+New Text Document.txt
+
+# ===== مجلدات لا تريد رفعها =====
+New folder/
+FinanceBot/

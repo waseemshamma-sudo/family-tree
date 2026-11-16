@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الشجرة الكاملة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #2c3e50; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 24px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { text-align: center; margin: 0 0 16px; }
+        button, select, input { font-family: 'Tajawal', sans-serif; }
+
+        /* شريط الأدوات */
+        .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .btn { padding: 8px 16px; border: 0; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 14px; transition: .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-blue { background: #e8f0fe; color: #1a73e8; } .btn-blue:hover { background: #d2e3fc; }
+        .btn-red { background: #fce8e6; color: #c5221f; } .btn-red:hover { background: #fad2cf; }
+        .btn-green { background: #e6f4ea; color: #1e7e34; } .btn-green:hover { background: #d3ecd9; }
+        .btn-gold { background: #fff4d6; color: #8a6100; } .btn-gold:hover { background: #ffe9ad; }
+        .seg { display: inline-flex; background: #ecf0f1; border-radius: 20px; padding: 3px; }
+        .seg button { border: 0; background: transparent; padding: 6px 16px; border-radius: 17px; cursor: pointer; font-weight: bold; color: #7f8c8d; }
+        .seg button.on { background: white; color: #2c3e50; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+        select { padding: 7px 10px; border: 1px solid #cfd8dc; border-radius: 8px; background: white; }
+
+        /* البحث */
+        .search { position: relative; flex: 1 1 260px; max-width: 360px; }
+        .search input { width: 100%; padding: 9px 14px; border: 1px solid #bdc3c7; border-radius: 20px; font-size: 15px; }
+        .sugg { position: absolute; top: 100%; right: 0; left: 0; background: white; border: 1px solid #d4d4d4; border-radius: 10px; z-index: 50; max-height: 260px; overflow-y: auto; box-shadow: 0 6px 18px rgba(0,0,0,.12); display: none; }
+        .sugg div { padding: 9px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .sugg div:hover, .sugg div.act { background: #eef6ff; }
+        .sugg small { color: #95a5a6; }
+
+        /* الفرع الحالي */
+        .crumbs { display: none; text-align: center; background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; }
+        .crumbs button { border: 0; background: none; color: #1a73e8; font-weight: bold; cursor: pointer; padding: 2px 4px; font-size: 14px; }
+        .crumbs b { color: #8a6100; }
+
+        .pdfopts { margin: 0 auto 10px; max-width: 680px; background: #f8fafb; border: 1px solid #e3e9ec; border-radius: 10px; padding: 8px 14px; font-size: 14px; }
+        .pdfopts summary { cursor: pointer; font-weight: bold; color: #5d6d7e; }
+        .pdfopts .grid { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; align-items: center; }
+        .pdfopts label { display: flex; gap: 6px; align-items: center; }
+
+        .stats { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 10px; }
+
+        /* عرض القائمة */
+        #listView ul { list-style: none; margin: 0; padding: 0 28px 0 0; border-right: 2px dashed #bdc3c7; margin-right: 14px; }
+        #listView > ul { border: 0; margin: 0; padding: 0; }
+        #listView li { margin: 6px 0; }
+        .row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #ecf0f1; border-radius: 8px; border-right: 5px solid var(--c, #95a5a6); cursor: pointer; transition: .15s; }
+        .row:hover { background: #dfe6e9; }
+        .row.sel { background: #e3f2fd; box-shadow: 0 0 0 2px #42a5f5; }
+        .row.hit { background: #fff3cd; }
+        .tg { border: 0; background: none; cursor: pointer; font-size: 12px; color: #7f8c8d; width: 22px; padding: 0; }
+        .tg.dot { cursor: default; text-align: center; }
+        .nm { font-weight: bold; color: #2c3e50; text-decoration: none; }
+        .nm:hover { color: #2980b9; text-decoration: underline; }
+        .badge { background: #e8f0fe; color: #1a73e8; padding: 2px 9px; border-radius: 12px; font-size: 12px; }
+        .badge.dead { background: #f8d7da; color: #721c24; }
+        .cnt { color: #7f8c8d; font-size: 12px; margin-right: auto; }
+
+        /* عرض المخطط */
+        #chartView { display: none; position: relative; }
+        #chartBox { height: 68vh; min-height: 420px; border: 1px solid #e3e9ec; border-radius: 10px; overflow: hidden; background:
+            radial-gradient(circle at 1px 1px, #dfe6e9 1px, transparent 0) 0 0 / 22px 22px, #fcfdfd; touch-action: none; cursor: grab; }
+        #chartBox.drag { cursor: grabbing; }
+        #svg { width: 100%; height: 100%; display: block; direction: ltr; user-select: none; }
+        .zoomctl { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .zoomctl button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid #cfd8dc; background: white; font-size: 18px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+        .cn { cursor: pointer; }
+        .cn text { pointer-events: none; }
+        .cn.sel rect.card { stroke-width: 3.5; filter: drop-shadow(0 0 5px rgba(66,165,245,.8)); }
+        .cn.hit rect.card { fill: #fff3cd !important; }
+        .tgl { cursor: pointer; }
+
+        /* لوحة الشخص المحدد */
+        #panel { display: none; position: sticky; bottom: 10px; margin-top: 14px; background: #2c3e50; color: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 20; }
+        #panel .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        #panel .who { font-weight: bold; font-size: 17px; }
+        #panel .lin { font-size: 12.5px; opacity: .8; margin-top: 2px; }
+        #panel .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        #panel .btn { background: rgba(255,255,255,.14); color: white; font-size: 13px; padding: 6px 12px; }
+        #panel .btn:hover { background: rgba(255,255,255,.28); }
+        #panel .x { background: none; border: 0; color: white; font-size: 22px; cursor: pointer; }
+
+        .btn-back { display: inline-block; padding: 10px 20px; background: #95a5a6; color: white; text-decoration: none; border-radius: 5px; margin-top: 24px; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; } .container { padding: 14px; }
+            .btn { padding: 7px 12px; font-size: 13px; }
+            .search { max-width: none; flex-basis: 100%; }
+            #listView ul { padding-right: 14px; margin-right: 8px; }
+            .row { padding: 7px 8px; flex-wrap: wrap; }
+        }
+        @media print {
+            body { background: white; padding: 0; } .container { box-shadow: none; max-width: none; }
+            .bar, .pdfopts, #panel, .zoomctl, .btn-back, .crumbs button { display: none !important; }
+            .row { background: white !important; box-shadow: none !important; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🌳 شجرة عائلة شما</h2>
+
+    <div class="bar">
+        <div class="search">
+            <input type="text" id="q" placeholder="🔍 ابحث عن شخص في الشجرة..." autocomplete="off">
+            <div class="sugg" id="sugg"></div>
+        </div>
+        <div class="seg">
+            <button id="vList" class="on">☰ قائمة</button>
+            <button id="vChart">🌳 مخطط</button>
+        </div>
+    </div>
+
+    <div class="bar">
+        <button class="btn btn-blue" id="bExpand">⬇️ توسيع الكل</button>
+        <button class="btn btn-red" id="bCollapse">⬆️ طي الكل</button>
+        <select id="level" title="عرض حتى جيل معين">
+            <option value="0">عرض حتى الجيل...</option>
+            <option value="1">الجيل 1</option><option value="2">حتى الجيل 2</option>
+            <option value="3">حتى الجيل 3</option><option value="4">حتى الجيل 4</option>
+            <option value="5">حتى الجيل 5</option><option value="6">حتى الجيل 6</option>
+        </select>
+        <button class="btn btn-green" id="bPdf">📄 تنزيل PDF</button>
+        <button class="btn btn-gold" id="bPrint">🖨️ طباعة</button>
+    </div>
+
+    <details class="pdfopts">
+        <summary>⚙️ خيارات ملف PDF</summary>
+        <div class="grid">
+            <label>الشكل:
+                <select id="oLayout">
+                    <option value="auto">تلقائي</option>
+                    <option value="v">رأسي (شجرة تقليدية)</option>
+                    <option value="h">أفقي (مضغوط للأسر الكبيرة)</option>
+                </select>
+            </label>
+            <label>الورق:
+                <select id="oPaper">
+                    <option value="auto">مقاس مخصص يناسب الشجرة</option>
+                    <option value="A4">A4 (مناسب للطباعة)</option>
+                    <option value="A3">A3</option>
+                </select>
+            </label>
+            <label>الأجيال:
+                <select id="oGens">
+                    <option value="0">الكل</option>
+                    <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                    <option value="5">5</option><option value="6">6</option>
+                </select>
+            </label>
+            <label><input type="checkbox" id="oDet" checked> سنوات الميلاد والوفاة</label>
+        </div>
+    </details>
+
+    <div class="crumbs" id="crumbs"></div>
+    <div class="stats" id="stats"></div>
+
+    <div id="listView"></div>
+
+    <div id="chartView">
+        <div id="chartBox"><svg id="svg"><g id="vp"></g></svg></div>
+        <div class="zoomctl">
+            <button id="zIn" title="تكبير">＋</button>
+            <button id="zOut" title="تصغير">－</button>
+            <button id="zFit" title="ملاءمة الشاشة">⛶</button>
+        </div>
+    </div>
+
+    <div id="panel"></div>
+
+    <div style="text-align:center;"><a href="/" class="btn-back">العودة للرئيسية</a></div>
+</div>
+
+<script>
+const PEOPLE = {{ people|tojson }};
+const INITIAL_ROOT = {{ root_id|tojson }};
+
+/* ============ البيانات ============ */
+const PAL = [['#1b5e20','#e8f5e9'],['#0d47a1','#e3f2fd'],['#e65100','#fff3e0'],['#6a1b9a','#f3e5f5'],
+             ['#00695c','#e0f2f1'],['#ad1457','#fce4ec'],['#4e342e','#efebe9'],['#37474f','#eceff1']];
+const byId = new Map();
+PEOPLE.forEach(p => { p.children = []; byId.set(p.id, p); });
+// كسر أي حلقة مغلقة في البيانات
+PEOPLE.forEach(p => {
+    const seen = new Set(); let cur = p;
+    while (cur && cur.father_id && byId.has(cur.father_id) && !seen.has(cur.id)) { seen.add(cur.id); cur = byId.get(cur.father_id); }
+    if (cur && seen.has(cur.id)) cur.father_id = null;
+});
+PEOPLE.forEach(p => { if (p.father_id && byId.has(p.father_id)) byId.get(p.father_id).children.push(p); });
+const yr = s => { const m = /\d{4}/.exec(s || ''); return m ? +m[0] : 9999; };
+const byBirth = (a, b) => yr(a.birth) - yr(b.birth) || a.id - b.id;
+PEOPLE.forEach(p => p.children.sort(byBirth));
+const roots = PEOPLE.filter(p => !p.father_id || !byId.has(p.father_id)).sort(byBirth);
+(function calc(list) { list.forEach(p => { calc(p.children); p.desc = p.children.reduce((s, c) => s + 1 + c.desc, 0); }); })(roots);
+
+/* ============ الحالة ============ */
+let focus = null, selected = null, view = 'list';
+const collapsed = new Set(), hits = new Set();
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s || '').replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').toLowerCase().trim();
+const scopeRoots = () => focus ? [byId.get(focus)] : roots;
+function chain(id, limit) {
+    const out = []; let cur = byId.get(id);
+    while (cur && out.length < (limit || 99)) { out.push(cur); cur = cur.father_id ? byId.get(cur.father_id) : null; }
+    return out;
+}
+function lineText(id, limit) {
+    const c = chain(id, limit || 4).map(p => p.name);
+    return c.length ? c[0] + c.slice(1).map(n => ' بن ' + n).join('') : '';
+}
+function walkAll(p, d, fn) { fn(p, d); p.children.forEach(c => walkAll(c, d + 1, fn)); }
+
+/* ============ ضبط الطي ============ */
+function expandAll() { collapsed.clear(); }
+function setLevel(n) {        // n = عدد الأجيال الظاهرة
+    collapsed.clear();
+    scopeRoots().forEach(r => walkAll(r, 0, (p, d) => { if (p.children.length && d >= n - 1) collapsed.add(p.id); }));
+}
+function collapseAll() { setLevel(1); }
+function defaultFold() {
+    const total = scopeRoots().reduce((s, r) => s + 1 + r.desc, 0);
+    total <= 80 ? expandAll() : setLevel(3);
+}
+
+/* ============ العرض ============ */
+function render() {
+    const rs = scopeRoots();
+    let total = 0, gens = 0;
+    rs.forEach(r => walkAll(r, 1, (p, d) => { total++; gens = Math.max(gens, d); }));
+    $('stats').textContent = `👥 ${total} شخص  •  🌿 ${gens} أجيال` + (focus ? '  (في هذا الفرع)' : '');
+    renderCrumbs();
+    if (view === 'list') {
+        $('listView').style.display = 'block'; $('chartView').style.display = 'none';
+        $('listView').innerHTML = '<ul>' + rs.map(r => listHtml(r, 0)).join('') + '</ul>';
+    } else {
+        $('listView').style.display = 'none'; $('chartView').style.display = 'block';
+        renderChart();
+    }
+    renderPanel();
+}
+
+function listHtml(p, d) {
+    const has = p.children.length, col = collapsed.has(p.id);
+    let h = `<li><div class="row${selected === p.id ? ' sel' : ''}${hits.has(p.id) ? ' hit' : ''}" data-id="${p.id}" style="--c:${PAL[d % 8][0]}">`;
+    h += has ? `<button class="tg" data-act="toggle" aria-label="فتح/طي">${col ? '◀' : '▼'}</button>` : '<span class="tg dot">•</span>';
+    h += `<a class="nm" href="/person/${p.id}">${esc(p.name)}</a>`;
+    if (p.death) h += '<span class="badge dead">🕊️ متوفى</span>';
+    else if (p.age) h += `<span class="badge">🎂 ${p.age} سنة</span>`;
+    if (has) h += `<span class="cnt">👥 ${p.desc}</span>`;
+    h += '</div>';
+    if (has && !col) h += '<ul>' + p.children.map(c => listHtml(c, d + 1)).join('') + '</ul>';
+    return h + '</li>';
+}
+
+function renderCrumbs() {
+    const el = $('crumbs');
+    if (!focus) { el.style.display = 'none'; return; }
+    const ch = chain(focus, 8).reverse();
+    el.style.display = 'block';
+    el.innerHTML = '📍 فرع: ' + ch.map(p => p.id === focus ? `<b>${esc(p.name)}</b>` : `<button data-focus="${p.id}">${esc(p.name)}</button>`).join(' ‹ ')
+        + ' &nbsp;|&nbsp; <button data-focus="0">🌳 عرض الشجرة كاملة</button>';
+}
+
+/* ============ المخطط التفاعلي ============ */
+const NW = 132, NH = 42, GX = 56, GY = 12;
+let lastNodes = [], V = { x: 0, y: 0, k: 1 };
+let ctx = null; try { ctx = document.createElement('canvas').getContext('2d'); } catch (e) {}
+function textW(t, px) {
+    try { if (ctx) { ctx.font = 'bold ' + px + 'px Tajawal, sans-serif'; return ctx.measureText(t).width; } } catch (e) {}
+    return t.length * px * 0.55;
+}
+function fitFont(t, maxW, base) {
+    let f = base; while (f > 8.5 && textW(t, f) > maxW) f -= 0.5; return f;
+}
+function yearOrEmpty(s) { const y = yr(s); return y < 9999 ? String(y) : ''; }
+function renderChart() {
+    const nodes = []; let slot = 0;
+    function lay(p, d) {
+        const n = { p, d, kids: [] }; nodes.push(n);
+        if (p.children.length && !collapsed.has(p.id)) {
+            p.children.forEach(c => n.kids.push(lay(c, d + 1)));
+            n.slot = (n.kids[0].slot + n.kids[n.kids.length - 1].slot) / 2;
+        } else n.slot = slot++;
+        return n;
+    }
+    scopeRoots().forEach(r => lay(r, 0));
+    nodes.forEach(n => { n.x = -n.d * (NW + GX); n.y = n.slot * (NH + GY); });
+    lastNodes = nodes;
+
+    let links = '', cards = '';
+    nodes.forEach(n => {
+        if (n.kids.length) {
+            const sy = n.y + NH / 2, mx = n.x - GX / 2;
+            let d = `M${n.x} ${sy}H${mx}`;
+            n.kids.forEach(k => { d += `M${mx} ${sy}V${k.y + NH / 2}H${k.x + NW}`; });
+            links += `<path d="${d}" fill="none" stroke="#7a5c3e" stroke-linecap="round" stroke-linejoin="round" stroke-width="${Math.max(1, 2.8 - 0.35 * n.d)}"/>`;
+        }
+    });
+    nodes.forEach(n => {
+        const p = n.p, dark = PAL[n.d % 8][0], light = PAL[n.d % 8][1], root = n.d === 0, dead = !!p.death;
+        const fill = root ? dark : (dead ? '#f1f1f1' : light);
+        const fs = fitFont(p.name, NW - 14, 14);
+        const by = yearOrEmpty(p.birth), dy = p.death ? (yearOrEmpty(p.death) || '؟') : '';
+        const sub = (by || dy) ? (by + (dy ? ' - ' + dy : '')) : '';
+        const ty = sub ? NH * 0.45 : NH / 2 + fs * 0.35;
+        const ff = 'font-family="Tajawal, sans-serif"';
+        cards += `<g class="cn${selected === p.id ? ' sel' : ''}${hits.has(p.id) ? ' hit' : ''}" data-id="${p.id}" transform="translate(${n.x} ${n.y})">`
+            + `<rect class="card" width="${NW}" height="${NH}" rx="9" fill="${fill}" stroke="${dark}" stroke-width="1.6"${dead ? ' stroke-dasharray="4 3"' : ''}/>`
+            + `<text x="${NW / 2}" y="${ty}" text-anchor="middle" ${ff} font-weight="700" font-size="${fs}" fill="${root ? '#fff' : '#1f2d3d'}">${esc(p.name)}</text>`
+            + (sub ? `<text x="${NW / 2}" y="${NH * 0.82}" text-anchor="middle" ${ff} font-size="10" fill="${root ? '#e0e0e0' : '#5d6d7e'}">${sub}</text>` : '');
+        if (p.children.length) {
+            cards += collapsed.has(p.id)
+                ? `<g class="tgl" data-act="toggle"><circle cx="0" cy="${NH / 2}" r="13" fill="#c8a24a" stroke="#fff" stroke-width="2"/><text x="0" y="${NH / 2 + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" ${ff}>+${p.desc}</text></g>`
+                : `<g class="tgl" data-act="toggle"><circle cx="0" cy="${NH / 2}" r="8" fill="#fff" stroke="${dark}" stroke-width="1.6"/><text x="0" y="${NH / 2 + 4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="${dark}">−</text></g>`;
+        }
+        cards += '</g>';
+    });
+    $('vp').innerHTML = links + cards;
+    fitView();
+}
+function boxSize() { const b = $('chartBox'); return [b.clientWidth || 800, b.clientHeight || 500]; }
+function applyV() { $('vp').setAttribute('transform', `translate(${V.x} ${V.y}) scale(${V.k})`); }
+function fitView() {
+    if (!lastNodes.length) return;
+    const xs = lastNodes.map(n => n.x), ys = lastNodes.map(n => n.y);
+    const minX = Math.min(...xs) - 30, maxX = Math.max(...xs) + NW + 30, minY = Math.min(...ys) - 30, maxY = Math.max(...ys) + NH + 30;
+    const [cw, ch] = boxSize(), bw = maxX - minX, bh = maxY - minY;
+    let k = Math.min(cw / bw, ch / bh, 1.2);
+    if (k < 0.35) {                       // شجرة ضخمة: ابدأ بحجم مقروء من الجذر بدل رسم مجهري
+        k = Math.min(0.7, cw / bw);
+        V = { k, x: cw - maxX * k, y: 20 - minY * k };
+    } else {
+        V = { k, x: (cw - bw * k) / 2 - minX * k, y: (ch - bh * k) / 2 - minY * k };
+    }
+    applyV();
+}
+function zoomAt(cx, cy, f) {
+    const k = Math.min(3, Math.max(0.05, V.k * f)), r = k / V.k;
+    V.x = cx - (cx - V.x) * r; V.y = cy - (cy - V.y) * r; V.k = k; applyV();
+}
+function centerOn(id) {
+    const n = lastNodes.find(n => n.p.id === id); if (!n) return;
+    const [cw, ch] = boxSize(); V.k = Math.max(V.k, 0.9);
+    V.x = cw / 2 - (n.x + NW / 2) * V.k; V.y = ch / 2 - (n.y + NH / 2) * V.k; applyV();
+}
+(function setupPanZoom() {
+    const box = $('chartBox'), ptrs = new Map(); let moved = false, last = null, pinch = 0;
+    box.addEventListener('pointerdown', e => {
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = false;
+        last = { x: e.clientX, y: e.clientY };
+        if (ptrs.size === 2) { const v = [...ptrs.values()]; pinch = Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y); }
+    });
+    window.addEventListener('pointermove', e => {
+        if (!ptrs.has(e.pointerId)) return;
+        ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (ptrs.size === 2) {
+            const v = [...ptrs.values()], d = Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y), r = box.getBoundingClientRect();
+            if (pinch) zoomAt((v[0].x + v[1].x) / 2 - r.left, (v[0].y + v[1].y) / 2 - r.top, d / pinch);
+            pinch = d; moved = true; return;
+        }
+        const dx = e.clientX - last.x, dy = e.clientY - last.y;
+        if (!moved && Math.abs(dx) + Math.abs(dy) > 5) { moved = true; box.classList.add('drag'); }
+        if (moved) { V.x += dx; V.y += dy; applyV(); last = { x: e.clientX, y: e.clientY }; }
+    });
+    const up = e => { ptrs.delete(e.pointerId); pinch = 0; box.classList.remove('drag'); };
+    window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    box.addEventListener('wheel', e => {
+        e.preventDefault(); const r = box.getBoundingClientRect();
+        zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 1 / 1.12);
+    }, { passive: false });
+    box.addEventListener('click', e => {
+        if (moved) { moved = false; return; }
+        const t = e.target.closest('[data-act="toggle"]'), g = e.target.closest('[data-id]');
+        if (t && g) { toggle(+g.dataset.id); return; }
+        if (g) select(+g.dataset.id);
+    });
+    $('zIn').onclick = () => { const s = boxSize(); zoomAt(s[0] / 2, s[1] / 2, 1.25); };
+    $('zOut').onclick = () => { const s = boxSize(); zoomAt(s[0] / 2, s[1] / 2, 0.8); };
+    $('zFit').onclick = fitView;
+})();
+
+/* ============ الإجراءات ============ */
+function toggle(id) { collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); render(); }
+function select(id) { selected = id; render(); }
+function setFocus(id) {
+    focus = id || null; if (id) selected = id; hits.clear();
+    defaultFold();
+    history.replaceState(null, '', focus ? '?root=' + focus : location.pathname);
+    render();
+}
+function pdfUrl(rootId, inline) {
+    const q = new URLSearchParams();
+    if (rootId) q.set('root', rootId);
+    q.set('layout', $('oLayout').value); q.set('paper', $('oPaper').value);
+    q.set('gens', $('oGens').value); q.set('details', $('oDet').checked ? '1' : '0');
+    if (inline) q.set('inline', '1');
+    return '/tree/pdf?' + q.toString();
+}
+function renderPanel() {
+    const el = $('panel');
+    if (!selected || !byId.has(selected)) { el.style.display = 'none'; return; }
+    const p = byId.get(selected);
+    el.style.display = 'block';
+    el.innerHTML = `<div class="top"><div><div class="who">${esc(p.name)}${p.death ? ' 🕊️' : ''}</div>`
+        + `<div class="lin">${esc(lineText(p.id, 5))}${p.children.length ? ' • ' + p.desc + ' من الأبناء والأحفاد' : ''}</div></div>`
+        + `<button class="x" data-act="close" aria-label="إغلاق">×</button></div>`
+        + `<div class="acts">`
+        + `<a class="btn" href="/person/${p.id}">👤 الملف الشخصي</a>`
+        + `<a class="btn" href="/add?father_id=${p.id}">➕ إضافة ابن</a>`
+        + (p.children.length && focus !== p.id ? `<button class="btn" data-act="focus">🎯 عرض هذا الفرع فقط</button>` : '')
+        + (p.children.length ? `<button class="btn" data-act="pdf">📄 PDF لهذا الفرع</button><button class="btn" data-act="print">🖨️ طباعة الفرع</button>` : '')
+        + `<a class="btn" href="/relationship?p1=${p.id}">🧬 صلة القرابة</a></div>`;
+}
+
+/* ============ البحث ============ */
+let suggItems = [], suggIdx = -1;
+function search(v) {
+    const n = norm(v), box = $('sugg');
+    if (n.length < 2) { box.style.display = 'none'; suggItems = []; return; }
+    suggItems = PEOPLE.filter(p => norm(lineText(p.id, 3)).includes(n)).slice(0, 8);
+    suggIdx = -1;
+    box.innerHTML = suggItems.map((p, i) => `<div data-i="${i}">${esc(p.name)} <small>${esc(lineText(p.id, 3).slice(p.name.length))}</small></div>`).join('')
+        || '<div style="color:#95a5a6">لا توجد نتائج</div>';
+    box.style.display = 'block';
+}
+function pick(p) {
+    $('sugg').style.display = 'none'; $('q').value = '';
+    if (focus && !chain(p.id).some(a => a.id === focus)) { focus = null; history.replaceState(null, '', location.pathname); }
+    chain(p.id).slice(1).forEach(a => collapsed.delete(a.id));      // افتح كل الآباء حتى يظهر الشخص
+    hits.clear(); hits.add(p.id); selected = p.id;
+    render();
+    if (view === 'chart') centerOn(p.id);
+    else { const el = document.querySelector('.row[data-id="' + p.id + '"]'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+$('q').addEventListener('input', e => search(e.target.value));
+$('q').addEventListener('keydown', e => {
+    const items = [...$('sugg').querySelectorAll('[data-i]')];
+    if (e.key === 'ArrowDown') suggIdx = Math.min(suggIdx + 1, items.length - 1);
+    else if (e.key === 'ArrowUp') suggIdx = Math.max(suggIdx - 1, 0);
+    else if (e.key === 'Enter') { e.preventDefault(); const p = suggItems[Math.max(suggIdx, 0)]; if (p) pick(p); return; }
+    else return;
+    items.forEach((el, i) => el.classList.toggle('act', i === suggIdx));
+});
+$('sugg').addEventListener('click', e => { const d = e.target.closest('[data-i]'); if (d) pick(suggItems[+d.dataset.i]); });
+document.addEventListener('click', e => { if (!e.target.closest('.search')) $('sugg').style.display = 'none'; });
+
+/* ============ ربط الأزرار ============ */
+$('bExpand').onclick = () => { expandAll(); render(); };
+$('bCollapse').onclick = () => { collapseAll(); render(); };
+$('level').onchange = e => { if (+e.target.value) { setLevel(+e.target.value); render(); } e.target.value = '0'; };
+$('bPdf').onclick = () => { location.href = pdfUrl(focus, false); };
+$('bPrint').onclick = () => window.open(pdfUrl(focus, true), '_blank');
+$('vList').onclick = () => { view = 'list'; $('vList').classList.add('on'); $('vChart').classList.remove('on'); render(); };
+$('vChart').onclick = () => { view = 'chart'; $('vChart').classList.add('on'); $('vList').classList.remove('on'); render(); };
+
+$('listView').addEventListener('click', e => {
+    if (e.target.closest('a')) return;
+    const row = e.target.closest('.row'); if (!row) return;
+    const id = +row.dataset.id;
+    if (e.target.closest('[data-act="toggle"]')) toggle(id); else select(id);
+});
+$('crumbs').addEventListener('click', e => { const b = e.target.closest('[data-focus]'); if (b) setFocus(+b.dataset.focus); });
+$('panel').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b || !selected) return;
+    const a = b.dataset.act;
+    if (a === 'close') { selected = null; render(); }
+    else if (a === 'focus') setFocus(selected);
+    else if (a === 'pdf') location.href = pdfUrl(selected, false);
+    else if (a === 'print') window.open(pdfUrl(selected, true), '_blank');
+});
+
+/* ============ البداية ============ */
+if (INITIAL_ROOT && byId.has(INITIAL_ROOT)) { focus = INITIAL_ROOT; selected = INITIAL_ROOT; }
+defaultFold();
+render();
+</script>
+</body>
+</html>

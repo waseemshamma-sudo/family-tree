@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- إضافة وسم التجاوب مع شاشات الجوال -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إحصائيات العائلة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 30px; font-size: 26px; }
+        
+        .section-title { color: #2980b9; border-right: 4px solid #3498db; padding-right: 12px; margin: 40px 0 20px 0; font-size: 20px; }
+
+        /* شبكة البطاقات */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: #fff; border: 1px solid #eef2f5; border-radius: 12px; padding: 25px 20px; 
+            text-align: center; transition: all 0.3s ease; text-decoration: none; color: inherit; display: block;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: #bdc3c7; }
+        
+        .card h3 { margin: 0 0 12px 0; color: #7f8c8d; font-size: 16px; font-weight: bold; }
+        .card .number { font-size: 36px; font-weight: bold; color: #2c3e50; margin: 0; line-height: 1; }
+        .card .sub { font-size: 15px; color: #e74c3c; font-weight: bold; margin-top: 10px; }
+        
+        /* تخصيص ألوان البطاقات */
+        .card.blue { border-bottom: 4px solid #3498db; }
+        .card.green { border-bottom: 4px solid #2ecc71; }
+        .card.red { border-bottom: 4px solid #e74c3c; }
+        .card.orange { border-bottom: 4px solid #f39c12; }
+
+        /* المدن (قابلة للنقر) */
+        .location-card { 
+            display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; 
+            text-decoration: none; color: #2c3e50; background: #f8f9fa; border: 1px solid #eef2f5; 
+            border-radius: 10px; margin-bottom: 12px; transition: 0.3s;
+        }
+        .location-card:hover { background: #e8f0fe; border-color: #3498db; transform: translateX(-5px); }
+        .location-name { font-weight: bold; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+        .location-count { background: #3498db; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+
+        /* زر العودة */
+        .btn-back-container { text-align: center; margin-top: 40px; }
+        .btn-back { display: inline-block; padding: 12px 30px; background: #7f8c8d; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-back:hover { background: #6c7a7d; transform: translateY(-2px); }
+
+        /* ✅ تحسينات الجوال */
+        @media (max-width: 768px) {
+            .container { padding: 20px 15px; border-radius: 0; box-shadow: none; }
+            h2 { font-size: 22px; margin-bottom: 20px; }
+            .section-title { font-size: 18px; margin: 30px 0 15px 0; }
+            
+            .grid { grid-template-columns: 1fr; gap: 15px; } /* جعل البطاقات تحت بعضها */
+            .card { padding: 20px 15px; }
+            .card .number { font-size: 32px; }
+            
+            .location-card { padding: 15px; flex-direction: row; } /* إبقاء المدينة والعدد في سطر واحد لتبدو أنيقة */
+            .location-name { font-size: 15px; }
+            .location-count { padding: 4px 12px; font-size: 13px; }
+            
+            .btn-back { width: 100%; display: block; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 إحصائيات عائلة شما</h2>
+        
+        <!-- 1. الأرقام العامة -->
+        <div class="grid">
+            <div class="card blue">
+                <h3>👥 إجمالي الأفراد</h3>
+                <p class="number">{{ total }}</p>
+            </div>
+            <div class="card green">
+                <h3>💚 الأحياء</h3>
+                <p class="number">{{ alive }}</p>
+            </div>
+            <div class="card red">
+                <h3>🕊️ المتوفون</h3>
+                <p class="number">{{ dead }}</p>
+            </div>
+        </div>
+
+        <!-- 2. إحصائيات الأعمار -->
+        <h3 class="section-title">📈 الأعمار</h3>
+        <div class="grid">
+            <div class="card orange">
+                <h3>متوسط عمر الأحياء</h3>
+                <p class="number">{{ avg_alive_age }}</p>
+                <p style="color:#7f8c8d; margin:5px 0 0 0; font-size: 14px;">سنة</p>
+            </div>
+            <div class="card orange">
+                <h3>متوسط عمر الوفاة</h3>
+                <p class="number">{{ avg_dead_age }}</p>
+                <p style="color:#7f8c8d; margin:5px 0 0 0; font-size: 14px;">سنة</p>
+            </div>
+            
+            {% if oldest_alive %}
+            <a href="/person/{{ oldest_alive.id }}" class="card blue">
+                <h3>أكبر معمر حي</h3>
+                <p class="number" style="font-size: 22px; margin-top: 5px;">{{ oldest_alive.name }}</p>
+                <p class="sub">{{ oldest_alive.age }} سنة</p>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- 3. المدن (قابلة للنقر) -->
+        <h3 class="section-title">📍 توزيع بلدان الإقامة <span style="font-size:14px; color:#7f8c8d; font-weight:normal;">(انقر للتصفية)</span></h3>
+        <div>
+            {% for loc, count in sorted_locations %}
+                <!-- الرابط هنا ينقلك للصفحة الرئيسية مع تفعيل فلتر البلد -->
+                <a href="/?location={{ loc }}" class="location-card">
+                    <span class="location-name">🌍 {{ loc }}</span>
+                    <span class="location-count">{{ count }} فرد</span>
+                </a>
+            {% else %}
+                <p style="text-align: center; color: #7f8c8d; padding: 20px; background: #f8f9fa; border-radius: 8px;">لا توجد بيانات للمدن.</p>
+            {% endfor %}
+        </div>
+        
+        <div class="btn-back-container">
+            <a href="/" class="btn-back">العودة للرئيسية</a>
+        </div>
+    </div>
+</body>
+</html>
